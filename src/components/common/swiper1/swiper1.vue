@@ -48,7 +48,8 @@ export default {
       let swiperLabel = label.getElementsByClassName('Item');
       // 保存个数
       this.slideCount = swiperLabel.length;
-      this.totalWidth = label.of
+      this.totalWidth = label.offsetWidth;
+      this.swiperStyle = label.style;
     }
   }
 }
