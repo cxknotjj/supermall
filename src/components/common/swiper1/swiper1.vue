@@ -4,8 +4,7 @@
       <slot></slot>
     </div>
     <div class="indicator">
-      <!-- :class="{active: index === currentIndex-1}" -->
-      <div class="indi-item"  v-for="(item,index) in count" :key="index"></div>
+      <div class="indi-item" :class="{active: index === currentIndex - 1}"   v-for="(item,index) in count" :key="index"></div>
     </div>
   </div>
 </template>
@@ -16,21 +15,27 @@ export default {
   data() {
     return {
       count: [1,2,3,4], //所有图片
-      currentIndex : 1, //当前图片
+      currentIndex : 0, //当前图片
       slideCount: 0,    //所有图片的个数
       swiperStyle:{    //轮播图样式
 
       },
-      totalWidth: null // 轮播图的总宽度
+      totalWidth: 0, // 轮播图的总宽度
+      scrolling: false //动画是否在滚动
     }
   },
   props: {
     interval: {       //轮播间隔时间
-      type: Number
+      type: Number,
+      default: 3000
+    },
+    animDuration: {
+      type: Number,
+      default: 300
     }
   },
   mounted: function () {
-    settimeout(() => {
+    setTimeout(() => {
       this.handleDom()
       this.starttime()
     },3000)
@@ -38,9 +43,24 @@ export default {
   methods: {
     starttime() {
       this.playTimer = window.setInterval(() => {
+        console.log(this.currentIndex)
+        this.scrollContent(-this.currentIndex * this.totalWidth);
         this.currentIndex++;
-
-      })
+      },this.interval)
+    },
+    setTransfrom(position) {                    // 识别参数
+      // this.swiperStyle.transform = `translate3d(${position}px,0,0)`
+      this.swiperStyle.transform = `translate3d(${position}px, 0, 0)`;
+    },
+    // 设置滚动动画
+    scrollContent(currentPosition) {
+      this.scorlling = true;
+      // 设置动画时间
+      this.swiperStyle.transition ='transform '+ this.animDuration + 'ms';
+      this.setTransfrom(currentPosition);
+      // 判断滚动到的位置
+      this.checkPosition();
+      this.scorlling = false;
     },
     // 获取swiper标签中插槽的个数
     handleDom() {
@@ -50,6 +70,23 @@ export default {
       this.slideCount = swiperLabel.length;
       this.totalWidth = label.offsetWidth;
       this.swiperStyle = label.style;
+      // this.setTransfrom(-this.totalWidth) 
+
+    },
+    checkPosition() {
+      window.setTimeout(() => {
+        if (this.currentIndex >= this.slideCount) {
+          this.currentIndex = 0;
+          // this.setTransfrom(0);
+        }
+        else if(this.currentIndex <= 0) {
+          console.log('永远不可能')
+          this.currentIndex = this.slideCount;
+          this.setTransform(-this.currentIndex * this.totalWidth);
+        }
+        // 结束移动后回调
+        this.$emit('transitionEnd', this.currentIndex-1);
+      },this.animDuration)
     }
   }
 }

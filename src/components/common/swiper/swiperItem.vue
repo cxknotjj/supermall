@@ -1,3 +1,4 @@
+
 <template>
   <div class="slide">
     <slot></slot>
