@@ -1,6 +1,7 @@
 <template>
-  <div class="listItem">
-    <img :src="item.show.img" @load="imgload">
+  <div class="listItem" @click="detail">
+    <!-- 图片懒加载v-lazy -->
+    <img v-lazy="showImg" @load="imgload">
      
     <div class="font">
       <p> {{item.title}}</p>
@@ -23,7 +24,16 @@ export default {
     imgload() {
       this.$bus.$emit('itemImgLoad')
     },
+    detail() {
+      // 刷入路径
+      this.$router.push('/detail/' + this.item.iid);
+    }
   },
+  computed: {
+    showImg() {
+      return this.item.image || this.item.show.img  
+    }
+  }
 }
 </script>
 

@@ -17,7 +17,7 @@ export default {
     position: fixed;
     bottom: 75px;
     right: 15px;
-    z-index:10;
+    z-index:20;
     color: rgba(184, 43, 43, 0.7);
   }
 </style>

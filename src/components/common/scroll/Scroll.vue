@@ -35,36 +35,44 @@
       // 1.创建BScroll对象
       this.cxk = new BScroll(this.$refs.wrapper, {
         click: true,
-        observeDom: true,
-        observeImage: true,
+        // observeDom: true,
+        // observeImage: true,
         probeType:this.probeType,
-        // pullUpLoad: this.pullUpLoad,
+        pullUpLoad: this.pullUpLoad,
       })
-      console.log(this.cxk);
       // this.scroll.on('scroll', (position)=> {
       //   console.log(position);
       // })
       // 2.监听滚动位置
-
-      this.cxk.on('scroll', (position)=> {
+      if (this.probeType == 2 || this.probeType == 3) {
+        this.cxk.on('scroll', (position)=> {
         this.$emit('scroll', position);
-
-      });
-      // this.cxk.on('pullingUp', () => {
-      //   this.$emit('pullingUp');
-      // });
+        });
+      }
+      // 3.下拉加载更多
+      if (this.probeType == 2 || this.probeType == 3) {
+        if (this.pullUpLoad) {
+          this.cxk.on('pullingUp', () => {
+          this.$emit('pullingUp');
+          });
+        }
+      }
     },
     methods: {
       scrollTo(x,y,time){
-        this.cxk.scrollTo(x,y,time);
+        // 当this.cxk不为空时执行
+        this.cxk && this.cxk.scrollTo(x,y,time);
       },
       // 封装执行多次下拉加载的方法。
       finishPullUp() {
         this.cxk.finishPullUp();
       },
       refresh() {
-        this.cxk.refresh();
-      }
+        this.cxk && this.cxk.refresh();
+      },
+      getY() {
+        return this.cxk ? this.cxk.y : 0
+      },
     }
   }
 </script>

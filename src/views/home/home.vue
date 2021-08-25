@@ -3,12 +3,13 @@
     <nav-bar class="home-nav">
       <div slot="center">购物街</div>
     </nav-bar>
+      <tab-control v-show="istab" class="tab-control" ref="tabControl2" @itemclick="animate" :titles="['流行','款式','样式']"></tab-control>
       <!-- :probeType中：的作用是确定传入参数的类型，不加：会传入一个字符串 -->
     <scroll ref="scroll" :probeType="3" :pullUpLoad="true" @pullingUp="pullingUp" @scroll="scrollPosition" >
-      <home-swiper :banners="banners"></home-swiper>
+      <home-swiper :banners="banners" @imageLoad="imageLoad"></home-swiper>
       <recommendview :recommend="recommend"></recommendview>
       <feature></feature>
-      <tab-control @itemclick="animate" class="staic" :titles="['流行','款式','样式']"></tab-control>
+      <tab-control v-show="!istab" ref="tabControl1" @itemclick="animate" class="staic" :titles="['流行','款式','样式']"></tab-control>
       <goodlist :Gooditem="goods[currentindex].list"></goodlist>
     </scroll>
             <!-- 监听组件点击 -->
@@ -27,7 +28,9 @@ import Recommendview from "./childComps/Recommendview";
 import goodlist from 'components/content/goods/goodlist';
 import TabControl from "components/content/tabControl/TabControl";
 import backTop from "components/content/backtop/backTop";
+import {delayed} from "common/utils.js";
 import NavBar from "components/common/navbar/NavBar.vue";
+import {itemList} from "common/mixin";
 import Scroll from "components/common/scroll/Scroll";
 
 import {getHomeMultidata,getHomeGoods} from "network/home.js";
@@ -66,17 +69,37 @@ export default {
       },
       ishowBacktop:false,
       currentindex: 'pop',
+      top: 0,
+      istab: false,
+      saveY: 0,
     }
   },
   // 生命周期函数
   created() {
+
     this.getHomeMultidatas()
+    // 请求数据
     this.getHomeGood('sell');
     this.getHomeGood('pop');
     this.getHomeGood('new');
-    this.$bus.$on('itemImgLoad',()=> {
-      this.$refs.scroll.refresh();
-    })
+  },
+  mixins:[itemList]
+  ,
+  mounted() {
+    console.log('我是mounted');
+  },
+  destroyed() {
+    this.$bus.$off('itemImgLoad',this.itemImageLoad);
+  },
+  // 悬浮框bug解决（有备无患）
+  activated() {
+    // 1.刷新滚动条高度
+    this.$refs.scroll.refresh();
+    // 2.设置滚动条位置
+    this.$refs.scroll.scrollTo(0,this.saveY,0);
+  },
+  deactivated() {
+    this.saveY = this.$refs.scroll.getY();
   },
   methods: {
     //
@@ -93,19 +116,22 @@ export default {
         case 2 :
           this.currentindex = "sell"
       }
+      this.$refs.tabControl1.currentIndex = index;
+      this.$refs.tabControl2.currentIndex = index;
+    },
+    imageLoad() {
+        // 流行框距离顶部的距离
+      this.top = this.$refs.tabControl1.$el.offsetTop;
     },
     backclick() {
-      console.log('牛蛙');
       this.$refs.scroll.scrollTo(0,0);
-      console.log(this.$refs.scroll.message)
     },
     scrollPosition(p) {
-      // console.log(p);
       this.ishowBacktop = (-p.y) > 1000;
+      this.istab = (-p.y) > this.top;
     },
     pullingUp() {
-      // this.getHomeGood(this.currentindex);
-      // this.$refs.scroll.finishPullUp();
+      this.getHomeGood(this.currentindex);
     },
     //
     // 网络请求相关代码
@@ -128,25 +154,28 @@ export default {
         // }
         // 写法二
         this.goods[type].list.push(...res.data.list);
+        // 下拉加载更多
+        this.$refs.scroll.finishPullUp();
       })
     },
   }
 }
 </script>
 
-<style>
+<style scoped>
   #home {
-    padding-top: 44px;
+    /* padding-top: 44px; */
     height: 100vh;
     position: relative;
   }
   .home-nav {
     background-color: pink;
     color: #fff;
-    position: fixed;
+    /* 在浏览器使用原生滚动时，为了让导航不跟随页面一起滚动 */ 
+    /* position: fixed;
     left: 0;
     right: 0;
-    top: 0;
+    top: 0; */
     z-index: 9;
   }
   .nav-bar{
@@ -163,6 +192,19 @@ export default {
     top: 44px;
     z-index: 9;
     background-color:white;
+  }
+  .after {
+    position:fixed;
+    top:44px;
+    left:0;
+    right:0;
+  }
+  .tab-control{
+    position:relative;
+    top:0px;
+    left:0;
+    right:0;
+    z-index:5
   }
   /*神一般的bug*/
   .wrapper {
